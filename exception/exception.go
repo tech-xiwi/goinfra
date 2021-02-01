@@ -1,6 +1,9 @@
 package exception
 
-import "runtime/debug"
+import (
+	"runtime/debug"
+	"time"
+)
 
 // Block struct to define try catch finally
 // like java
@@ -11,6 +14,7 @@ type Block struct {
 	ReTry         func(...interface{})
 	MaxRetryCount int
 	RetryCount    int
+	RetryTimeSpan time.Duration
 }
 
 // Do ,inner to exec try catch
@@ -24,6 +28,9 @@ func (thiz *Block) Do(params ...interface{}) {
 				thiz.Catch(debug.Stack(), r, params)
 				if thiz.ReTry != nil && thiz.RetryCount < thiz.MaxRetryCount {
 					thiz.RetryCount++
+					if thiz.RetryTimeSpan > 0 {
+						time.Sleep(thiz.RetryTimeSpan)
+					}
 					thiz.do(params...)
 				}
 			}
@@ -39,6 +46,9 @@ func (thiz *Block) do(params ...interface{}) {
 				thiz.RetryCount++
 				thiz.Catch(debug.Stack(), r, params)
 				if thiz.ReTry != nil && thiz.RetryCount < thiz.MaxRetryCount {
+					if thiz.RetryTimeSpan > 0 {
+						time.Sleep(thiz.RetryTimeSpan)
+					}
 					thiz.do(params...)
 				}
 			}
